@@ -76,8 +76,8 @@ app.get("/liked-songs", async (req, res) => {
 app.put("/play", async (req, res) => {
     const { accessToken, uri, timestamp } = req.body;
 
-    console.log("Incoming play request:", req.body);
-    console.log(`Playing song at position: ${timestamp * 1000} milliseconds`);
+    console.log("Now playing: ", uri);
+    console.log(`at position: ${timestamp * 1000} milliseconds`);
 
     if (!accessToken || !uri) {
       return res.status(400).json({ error: "Missing accessToken or uri" });

@@ -7,18 +7,18 @@ export class SongHandler {
     constructor(songs, token) {
       this.songs = songs;
       this.token = token;
-      this.curSelectedGroup = 0;
+      this.curSelectedPlayer = 0;
       this.songPlayers = [];
-    
+      
     }
   
     createSongPlayers (groupSize) {
-      var startIndex = 0;
-      var endIndex = startIndex + groupSize;
-      var groupIndex = 0;
+      this.songPlayers = []; // Clear existing players to prevent duplicates
+      let startIndex = 0;
+      let endIndex = startIndex + groupSize;
+      let groupIndex = 0;
 
-      for(let i = 0; i < this.songs.length - groupSize; i += groupSize){
-      
+       while (startIndex < this.songs.length) {
         const songGroup = this.songs.slice(startIndex, endIndex);
         const songPlayer = new SongPlayer(songGroup, groupIndex, this);
         this.songPlayers.push(songPlayer);
@@ -26,7 +26,7 @@ export class SongHandler {
         groupIndex++;
         startIndex += groupSize;
         endIndex += groupSize;
-      }
+      } 
 
     }
 
@@ -36,7 +36,6 @@ export class SongHandler {
 
 
     playSong = async (trackUri, timestamp) => {
-      console.log("Playing song:", trackUri, timestamp);
       try {
         const deviceAvailable = await availableDevices(this.token);
         if (!deviceAvailable) return;
@@ -54,14 +53,16 @@ export class SongHandler {
 
 
 
+
+
   }
 
 
   export class SongPlayer {
-    constructor(songs, groupIndex, handler) {
+    constructor(songs, playerIndex, handler) {
       this.handler = handler;
       this.songs = songs;
-      this.groupIndex = groupIndex;
+      this.playerIndex = playerIndex;
 
       this.currentSongIndex = 0;
       this.currentTime = 0;
@@ -73,15 +74,17 @@ export class SongHandler {
       if (this.songs.length === 0) return;
       this.isPlaying = true;
       this.playCurrentSong();
+      
     }
   
     playCurrentSong() {
       if (!this.isInRange(this.currentSongIndex)) return;
-
+      console.log("Playing song:", this.currentSong().track.name);
       const currentSong = this.currentSong();
   
       this.interval = setInterval(() => {
         this.currentTime++;
+        
         if (this.currentTime >= currentSong.track.duration_ms / 1000) {
           this.nextSong();
         }
@@ -96,6 +99,7 @@ export class SongHandler {
       if (this.isInRange(this.currentSongIndex)) {
         this.playCurrentSong();
         if (this.isSelected()) {
+          console.log(`Player: ${this.playerIndex}, Song: ${this.currentSongIndex}`);
           this.playFromCurrentTime();
         }
       } else {
@@ -109,12 +113,14 @@ export class SongHandler {
     }
   
     isSelected = () => {
-      if(this.handler === null){
+      if (this.handler === null) {
         console.log("No handler found");
         return false;
       }
 
-      return (this.groupIndex === this.handler.curSelectedGroup);
+      const isSelected = this.playerIndex === this.handler.curSelectedPlayer;
+      console.log(`Player ${this.playerIndex} is ${isSelected ? "selected" : "not selected"}`);
+      return isSelected;
     }
 
     currentSong = () => {
