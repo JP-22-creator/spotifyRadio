@@ -3,13 +3,59 @@ import axios from "axios";
 
 const BACKEND_URL = "http://localhost:3001";
 
+// Global token variable
+let token = null;
+
+// Define playSong outside
+const playSong = async (trackUri, timestamp) => {
+  console.log("Playing song:", trackUri, timestamp);
+  try {
+    const deviceAvailable = await availableDevices();
+    if (!deviceAvailable) return;
+
+    await axios.put(`${BACKEND_URL}/play`, {
+      accessToken: token,
+      uri: trackUri,
+      timestamp: timestamp,
+    });
+  } catch (error) {
+    console.error("Error playing song:", error);
+    alert("Something went wrong while trying to play the song.");
+  }
+};
+
+// Define availableDevices outside
+const availableDevices = async () => {
+  try {
+    const devicesRes = await axios.get("https://api.spotify.com/v1/me/player/devices", {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+
+    const devices = devicesRes.data.devices;
+
+    if (!devices || devices.length === 0) {
+      alert("No available Spotify devices found.");
+      return false;
+    }
+
+    return true;
+  } catch (error) {
+    console.error("Error checking devices:", error.response?.data || error.message);
+    alert("Couldn't check for Spotify devices.");
+    return false;
+  }
+};
+
 class SongPlayer {
-  constructor(songs) {
+  constructor(songs, groupIndex, isSelected) {
     this.songs = songs;
     this.currentSongIndex = 0;
     this.currentTime = 0;
     this.isPlaying = false;
     this.interval = null;
+    this.groupIndex = groupIndex;
+    this.isSelected = isSelected;
+    this.currentSong = null;
   }
 
   start() {
@@ -20,11 +66,12 @@ class SongPlayer {
 
   playCurrentSong() {
     if (this.currentSongIndex >= this.songs.length) return;
-    const currentSong = this.songs[this.currentSongIndex];
-    console.log(`Playing: ${currentSong.track.name}`);
+    this.currentSong = this.songs[this.currentSongIndex];
+
     this.interval = setInterval(() => {
       this.currentTime++;
-      if (this.currentTime >= currentSong.track.duration_ms / 1000) {
+      console.log(`Group ${this.groupIndex}, Current time: ${this.currentTime}`);
+      if (this.currentTime >= this.currentSong.track.duration_ms / 1000) {
         this.nextSong();
       }
     }, 1000);
@@ -36,6 +83,9 @@ class SongPlayer {
     this.currentTime = 0;
     if (this.currentSongIndex < this.songs.length) {
       this.playCurrentSong();
+      if (this.isSelected) {
+        playSong(this.songs[this.currentSongIndex].track.uri, this.currentTime);
+      }
     } else {
       this.isPlaying = false;
       console.log("Finished playing all songs in the group.");
@@ -43,22 +93,21 @@ class SongPlayer {
   }
 
   playFromCurrentTime() {
-    clearInterval(this.interval);
-    this.playCurrentSong();
+    playSong(this.currentSong.track.uri, this.currentTime);
   }
 }
 
 function App() {
-  const [token, setToken] = useState(null);
   const [songs, setSongs] = useState([]);
   const [user, setUser] = useState(null);
   const [songPlayers, setSongPlayers] = useState([]);
+  const [selectedGroupIndex, setSelectedGroupIndex] = useState(null);
 
-  useEffect(() => { // called on page load
+  useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     const accessToken = urlParams.get("access_token");
     if (accessToken) {
-      setToken(accessToken);
+      token = accessToken; // Update the global token
       fetchLikedSongs(accessToken);
       fetchUserProfile(accessToken);
     }
@@ -83,64 +132,6 @@ function App() {
       console.error("Error fetching user profile:", error);
     }
   };
-  
-
-  const activateDevice = async () => {
-    try {
-      const devicesRes = await axios.get("https://api.spotify.com/v1/me/player/devices", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-  
-      const devices = devicesRes.data.devices;
-      console.log("Available Spotify Devices:", devices);
-  
-      if (!devices || devices.length === 0) {
-        alert("No available Spotify devices found.");
-        return null;
-      }
-  
-      const activeDevice = devices.find((d) => d.is_active) || devices[0];
-      console.log("Selected device:", activeDevice);
-  
-      await axios.put(
-        "https://api.spotify.com/v1/me/player",
-        {
-          device_ids: [activeDevice.id],
-          play: true,
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        }
-      );
-  
-      return activeDevice.id;
-    } catch (error) {
-      console.error("Error activating device:", error.response?.data || error.message);
-      alert("Couldn't activate a Spotify device.");
-      return null;
-    }
-  };
-  
-
-  const playSong = async (trackUri, timestamp) => {
-    try {
-      const deviceId = await activateDevice();
-      if (!deviceId) return;
-  
-      await axios.put(`${BACKEND_URL}/play`, {
-        accessToken: token,
-        uri: trackUri,
-        timestamp: timestamp,
-      });
-    } catch (error) {
-      console.error("Error playing song:", error);
-      alert("Something went wrong while trying to play the song.");
-    }
-  };
-  
 
   const groupSongs = (songs, groupSize) => {
     const groups = [];
@@ -155,18 +146,20 @@ function App() {
   useEffect(() => {
     if (songs.length > 0) {
       const groups = groupSongs(songs, 10);
-      const players = groups.map(group => new SongPlayer(group));
+      const players = groups.map((group, index) => new SongPlayer(group, index, false));
       setSongPlayers(players);
       players.forEach(player => player.start());
     }
   }, [songs]);
 
   const handleGroupButtonClick = (index) => {
+    setSelectedGroupIndex(index);
     const player = songPlayers[index];
+    songPlayers.forEach(player => player.isSelected = false);
+    player.isSelected = true;
     if (player) {
-      const currentSong = player.songs[player.currentSongIndex];
-      if (currentSong) {
-        playSong(currentSong.track.uri, player.currentTime);
+      if (player.currentSong) {
+        player.playFromCurrentTime();
       }
     }
   };
@@ -203,7 +196,6 @@ function App() {
       )}
     </div>
   );
-  
 }
 
 export default App;
