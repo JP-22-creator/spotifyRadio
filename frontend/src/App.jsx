@@ -1,11 +1,8 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
 import { SongHandler } from "./player";
-import dotenv from "dotenv";
 
-dotenv.config();
-
-const BACKEND_URL = process.env.BACKEND_URL;
+const BACKEND_URL = "https://spotifyradio.onrender.com";
 
 // Global token variable
 let token = null;
