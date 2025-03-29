@@ -97,6 +97,16 @@ function App() {
   };
   
 
+  const groupSongs = (songs, groupSize) => {
+    const groups = [];
+    for (let i = 0; i < songs.length; i += groupSize) {
+      groups.push(songs.slice(i, i + groupSize));
+    }
+    return groups;
+  };
+
+  const songGroups = groupSongs(songs, 10);
+
   return (
     <div>
       {!token ? (
@@ -115,12 +125,13 @@ function App() {
               <p style={{ fontWeight: "bold", fontSize: "1.2rem" }}>{user.display_name}</p>
             </div>
           )}
-          <h1>Liked Songs</h1>
+          <h1>Song Groups</h1>
           <ul>
-            {songs.map((item) => (
-              <li key={item.track.id}>
-                {item.track.name} - {item.track.artists[0].name}
-                <button onClick={() => playSong(item.track.uri)}>▶ Play</button>
+            {songGroups.map((group, index) => (
+              <li key={index}>
+                <button onClick={() => playSong(group[0].track.uri)}>
+                  Play Group {index + 1}
+                </button>
               </li>
             ))}
           </ul>
