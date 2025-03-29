@@ -47,7 +47,7 @@ app.get("/callback", async (req, res) => {
     });
 
     const accessToken = response.data.access_token;
-    res.redirect(`http://localhost:5173/?access_token=${accessToken}`);
+    res.redirect(`${FRONTEND_URI}/?access_token=${accessToken}`);
 
 
     } catch (error) {

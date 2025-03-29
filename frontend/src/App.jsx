@@ -1,7 +1,11 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
 import { SongHandler } from "./player";
-const BACKEND_URL = "http://localhost:3001";
+import dotenv from "dotenv";
+
+dotenv.config();
+
+const BACKEND_URL = process.env.BACKEND_URL;
 
 // Global token variable
 let token = null;
