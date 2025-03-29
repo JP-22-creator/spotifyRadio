@@ -6,13 +6,17 @@ const BACKEND_URL = "http://localhost:3001";
 function App() {
   const [token, setToken] = useState(null);
   const [songs, setSongs] = useState([]);
+  const [user, setUser] = useState(null);
 
-  useEffect(() => {
+
+  useEffect(() => { // called on page load
     const urlParams = new URLSearchParams(window.location.search);
     const accessToken = urlParams.get("access_token");
     if (accessToken) {
       setToken(accessToken);
       fetchLikedSongs(accessToken);
+      fetchUserProfile(accessToken);
+
     }
   }, []);
 
@@ -25,6 +29,18 @@ function App() {
     }
   };
 
+  const fetchUserProfile = async (accessToken) => {
+    try {
+      const response = await axios.get("https://api.spotify.com/v1/me", {
+        headers: { Authorization: `Bearer ${accessToken}` },
+      });
+      setUser(response.data);
+    } catch (error) {
+      console.error("Error fetching user profile:", error);
+    }
+  };
+  
+
   const playSong = async (trackUri) => {
     try {
       await axios.put(`${BACKEND_URL}/play`, { access_token: token, track_uri: trackUri });
@@ -36,9 +52,21 @@ function App() {
   return (
     <div>
       {!token ? (
-        <a href={`${BACKEND_URL}/login`}><button>Login with Spotify</button></a>
+        <a href={`${BACKEND_URL}/login`}>
+          <button>Login with Spotify</button>
+        </a>
       ) : (
         <>
+          {user && user.images?.length > 0 && (
+            <div style={{ display: "flex", alignItems: "center", gap: "1rem", marginBottom: "1rem" }}>
+              <img
+                src={user.images[0].url}
+                alt="Profile"
+                style={{ width: "80px", height: "80px", borderRadius: "50%" }}
+              />
+              <p style={{ fontWeight: "bold", fontSize: "1.2rem" }}>{user.display_name}</p>
+            </div>
+          )}
           <h1>Liked Songs</h1>
           <ul>
             {songs.map((item) => (
@@ -52,6 +80,7 @@ function App() {
       )}
     </div>
   );
+  
 }
 
 export default App;
