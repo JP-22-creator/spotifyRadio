@@ -16,7 +16,8 @@ const FRONTEND_URI = process.env.FRONTEND_URI;
 // 1. Login Route - Redirects to Spotify Authorization
 // app.get("/page") respons to requests
 app.get("/login", (req, res) => {
-    const scope = "user-library-read user-modify-playback-state streaming"; // what we want
+    const scope = "user-library-read user-modify-playback-state user-read-playback-state streaming";
+    // what we want
     const authUrl = `https://accounts.spotify.com/authorize?${querystring.stringify({ // builds url we go to
         response_type: "code",
         client_id: CLIENT_ID,
@@ -74,19 +75,32 @@ app.get("/liked-songs", async (req, res) => {
 // 4. Play a Song
 app.put("/play", async (req, res) => {
     const { accessToken, uri } = req.body;
+
+    console.log("Incoming play request:", req.body);
+
+
+    if (!accessToken || !uri) {
+      return res.status(400).json({ error: "Missing accessToken or uri" });
+    }
   
     try {
       await axios.put(
         "https://api.spotify.com/v1/me/player/play",
         { uris: [uri] },
-        { headers: { Authorization: `Bearer ${accessToken}` } }
+        {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            "Content-Type": "application/json",
+          },
+        }
       );
   
       res.send("Playing song");
     } catch (error) {
-      console.error("Error playing song:", error);
+      console.error("Error playing song:", error.response?.data || error.message);
       res.status(500).send("Failed to play song");
     }
   });
+  
 
 app.listen(3001, () => console.log("Server running on http://localhost:3001"));

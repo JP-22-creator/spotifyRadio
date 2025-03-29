@@ -41,13 +41,61 @@ function App() {
   };
   
 
-  const playSong = async (trackUri) => {
+  const activateDevice = async () => {
     try {
-      await axios.put(`${BACKEND_URL}/play`, { access_token: token, track_uri: trackUri });
+      const devicesRes = await axios.get("https://api.spotify.com/v1/me/player/devices", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+  
+      const devices = devicesRes.data.devices;
+      console.log("Available Spotify Devices:", devices);
+  
+      if (!devices || devices.length === 0) {
+        alert("No available Spotify devices found.");
+        return null;
+      }
+  
+      const activeDevice = devices.find((d) => d.is_active) || devices[0];
+      console.log("Selected device:", activeDevice);
+  
+      await axios.put(
+        "https://api.spotify.com/v1/me/player",
+        {
+          device_ids: [activeDevice.id],
+          play: true,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+  
+      return activeDevice.id;
     } catch (error) {
-      console.error("Error playing song:", error);
+      console.error("Error activating device:", error.response?.data || error.message);
+      alert("Couldn't activate a Spotify device.");
+      return null;
     }
   };
+  
+
+  const playSong = async (trackUri) => {
+    try {
+      const deviceId = await activateDevice();
+      if (!deviceId) return;
+  
+      await axios.put(`${BACKEND_URL}/play`, {
+        accessToken: token,
+        uri: trackUri,
+      });
+    } catch (error) {
+      console.error("Error playing song:", error);
+      alert("Something went wrong while trying to play the song.");
+    }
+  };
+  
 
   return (
     <div>
