@@ -3,11 +3,56 @@ import axios from "axios";
 
 const BACKEND_URL = "http://localhost:3001";
 
+class SongPlayer {
+  constructor(songs) {
+    this.songs = songs;
+    this.currentSongIndex = 0;
+    this.currentTime = 0;
+    this.isPlaying = false;
+    this.interval = null;
+  }
+
+  start() {
+    if (this.songs.length === 0) return;
+    this.isPlaying = true;
+    this.playCurrentSong();
+  }
+
+  playCurrentSong() {
+    if (this.currentSongIndex >= this.songs.length) return;
+    const currentSong = this.songs[this.currentSongIndex];
+    console.log(`Playing: ${currentSong.track.name}`);
+    this.interval = setInterval(() => {
+      this.currentTime++;
+      if (this.currentTime >= currentSong.track.duration_ms / 1000) {
+        this.nextSong();
+      }
+    }, 1000);
+  }
+
+  nextSong() {
+    clearInterval(this.interval);
+    this.currentSongIndex++;
+    this.currentTime = 0;
+    if (this.currentSongIndex < this.songs.length) {
+      this.playCurrentSong();
+    } else {
+      this.isPlaying = false;
+      console.log("Finished playing all songs in the group.");
+    }
+  }
+
+  playFromCurrentTime() {
+    clearInterval(this.interval);
+    this.playCurrentSong();
+  }
+}
+
 function App() {
   const [token, setToken] = useState(null);
   const [songs, setSongs] = useState([]);
   const [user, setUser] = useState(null);
-
+  const [songPlayers, setSongPlayers] = useState([]);
 
   useEffect(() => { // called on page load
     const urlParams = new URLSearchParams(window.location.search);
@@ -16,7 +61,6 @@ function App() {
       setToken(accessToken);
       fetchLikedSongs(accessToken);
       fetchUserProfile(accessToken);
-
     }
   }, []);
 
@@ -81,7 +125,7 @@ function App() {
   };
   
 
-  const playSong = async (trackUri) => {
+  const playSong = async (trackUri, timestamp) => {
     try {
       const deviceId = await activateDevice();
       if (!deviceId) return;
@@ -89,6 +133,7 @@ function App() {
       await axios.put(`${BACKEND_URL}/play`, {
         accessToken: token,
         uri: trackUri,
+        timestamp: timestamp,
       });
     } catch (error) {
       console.error("Error playing song:", error);
@@ -106,6 +151,25 @@ function App() {
   };
 
   const songGroups = groupSongs(songs, 10);
+
+  useEffect(() => {
+    if (songs.length > 0) {
+      const groups = groupSongs(songs, 10);
+      const players = groups.map(group => new SongPlayer(group));
+      setSongPlayers(players);
+      players.forEach(player => player.start());
+    }
+  }, [songs]);
+
+  const handleGroupButtonClick = (index) => {
+    const player = songPlayers[index];
+    if (player) {
+      const currentSong = player.songs[player.currentSongIndex];
+      if (currentSong) {
+        playSong(currentSong.track.uri, player.currentTime);
+      }
+    }
+  };
 
   return (
     <div>
@@ -129,7 +193,7 @@ function App() {
           <ul>
             {songGroups.map((group, index) => (
               <li key={index}>
-                <button onClick={() => playSong(group[0].track.uri)}>
+                <button onClick={() => handleGroupButtonClick(index)}>
                   Play Group {index + 1}
                 </button>
               </li>

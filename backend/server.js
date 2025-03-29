@@ -74,10 +74,10 @@ app.get("/liked-songs", async (req, res) => {
 
 // 4. Play a Song
 app.put("/play", async (req, res) => {
-    const { accessToken, uri } = req.body;
+    const { accessToken, uri, timestamp } = req.body;
 
     console.log("Incoming play request:", req.body);
-
+    console.log(`Playing song at position: ${timestamp * 1000} milliseconds`);
 
     if (!accessToken || !uri) {
       return res.status(400).json({ error: "Missing accessToken or uri" });
@@ -86,7 +86,7 @@ app.put("/play", async (req, res) => {
     try {
       await axios.put(
         "https://api.spotify.com/v1/me/player/play",
-        { uris: [uri] },
+        { uris: [uri], position_ms: timestamp * 1000 },
         {
           headers: {
             Authorization: `Bearer ${accessToken}`,
