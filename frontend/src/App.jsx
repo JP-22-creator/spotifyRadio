@@ -2,11 +2,16 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 import { SongHandler } from "./player";
 
-const BACKEND_URL = "https://spotifyradio.onrender.com";
+const BACKEND_URL = "http://localhost:3001";
 
 // Global token variable
 let token = null;
 let songHandlerActive = false;
+let start = false;
+
+const totalSongs = 1000;
+const playerSize = 250;
+
 
 function App() {
   const [user, setUser] = useState(null);
@@ -19,14 +24,20 @@ function App() {
   }, []);
 
   const asyncStart = async () => {
+    if(start) return;
+    start = true;
     const urlParams = new URLSearchParams(window.location.search);
     const accessToken = urlParams.get("access_token");
     if (accessToken) {
       token = accessToken; // Update the global token
-      const songList = await fetchLikedSongs(accessToken,220);
+      const songList = await fetchLikedSongs(accessToken,totalSongs);
       const userData = await fetchUserProfile(accessToken);
 
+      
+
+
       setUser(userData);
+      console.log('Creating new SongHandler instance useEffect');
       setSongHandler(new SongHandler(songList, accessToken));
     }
   };
@@ -37,7 +48,7 @@ function App() {
     if (songHandler && !songHandlerActive) {
       songHandlerActive = true;
       console.log("songHandler created by useEffect");
-      songHandler.createSongPlayers((songHandler.songs.length/10));
+      songHandler.createSongPlayers((playerSize));
       songHandler.startAllSongPlayers();
       setRadios(songHandler.songPlayers);
     }
@@ -46,7 +57,7 @@ function App() {
   const fetchLikedSongs = async (accessToken, maxSongs) => {
     let allSongs = [];
     let offset = 0;
-    const limit = 50;
+    const limit = Math.min(totalSongs, 50);
 
     while (allSongs.length < maxSongs) {
       const response = await axios.get("https://api.spotify.com/v1/me/tracks", {
@@ -68,7 +79,7 @@ function App() {
       offset += limit; // Move to the next batch
     }
 
-    return allSongs.slice(0, 220); // Return only the first 220 songs
+    return allSongs;
   };
 
   const fetchUserProfile = async (accessToken) => {
@@ -83,14 +94,12 @@ function App() {
   };
 
   const handleGroupButtonClick = (index) => {
-    setCurSelectedRadio(index); // Update UI state
-    songHandler.curSelectedPlayer = index; // Update SongHandler state
-    const curRadio = radios[index];
-    if (curRadio) {
-      curRadio.playFromCurrentTime();
-    }
-    console.log(`Selected Radio: ${index}`); // Log the selected radio
+    console.log(`Button clicked for player ${index}`);
+    setCurSelectedRadio(index);
+    songHandler.selectPlayer(index);
   };
+
+  
 
   return (
     <div>
