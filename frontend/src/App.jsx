@@ -104,9 +104,21 @@ function App() {
 
   const handlePausePlayback = () => {
     setCurSelectedRadio(-1);
+    songHandler.curSelectedPlayer = -1;
     songHandler.pausePlayback();
   }
-  
+
+  const handlePreviousTrack = () => {
+    if (curSelectedRadio !== -1) {
+      songHandler.previousTrack();
+    }
+  }
+
+  const handleNextTrack = () => {
+    if (curSelectedRadio !== -1) {
+      songHandler.nextTrack();
+    }
+  }
 
   return (
     <div>
@@ -127,7 +139,20 @@ function App() {
             </div>
           )}
           <h1>Radios</h1>
-          <div style={{ marginBottom: "1rem" }}>
+          <div style={{ marginBottom: "1rem", display: "flex", gap: "0.5rem" }}>
+            <button onClick={handlePreviousTrack} 
+              style={{
+                padding: "0.5rem 1rem",
+                fontSize: "1rem",
+                backgroundColor: "#1DB954",
+                color: "white",
+                border: "none",
+                borderRadius: "20px",
+                cursor: "pointer"
+              }}
+            >
+              ⏮ Previous
+            </button>
             <button onClick={handlePausePlayback} 
               style={{
                 padding: "0.5rem 1rem",
@@ -139,7 +164,20 @@ function App() {
                 cursor: "pointer"
               }}
             >
-              Pause All
+              ⏸ Pause
+            </button>
+            <button onClick={handleNextTrack} 
+              style={{
+                padding: "0.5rem 1rem",
+                fontSize: "1rem",
+                backgroundColor: "#1DB954",
+                color: "white",
+                border: "none",
+                borderRadius: "20px",
+                cursor: "pointer"
+              }}
+            >
+              Next ⏭
             </button>
           </div>
           <ul>

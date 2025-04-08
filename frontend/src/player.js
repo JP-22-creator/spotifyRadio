@@ -103,6 +103,14 @@ export class SongHandler {
       }
     };
 
+    previousTrack  () {
+      this.curPlayer().previousSong();
+    };
+
+    nextTrack() {
+      this.curPlayer().nextSong();
+    };
+
     selectPlayer(playerIndex) {
       console.log(`Selecting player ${playerIndex} (previous: ${this.curSelectedPlayer})`);
       console.log('Current songPlayers array:', this.songPlayers);
@@ -119,6 +127,10 @@ export class SongHandler {
 
     getCurrentPlayerIndex() {
       return this.curSelectedPlayer;
+    }
+
+    curPlayer = () => {
+      return this.songPlayers[this.curSelectedPlayer];
     }
     
     shuffleArray(array) {
@@ -182,6 +194,13 @@ export class SongPlayer {
       this.currentSongIndex++;
       this.currentTime = 0;
 
+      this.handler.worker.postMessage({
+        type: 'PAUSE_SIMULATION',
+        data: {
+          playerIndex: this.playerIndex,
+        }
+      });
+
       if (this.isInRange(this.currentSongIndex)) {
         this.simulateCurrentSong();
         if (this.isSelected()) {
@@ -191,6 +210,29 @@ export class SongPlayer {
       } else {
         this.isPlaying = false;
         console.log("Finished playing all songs in the group.");
+      }
+    }
+
+    previousSong() {
+      if(this.currentSongIndex > 1){
+        this.currentSongIndex--;
+        this.currentTime = 0;
+
+        this.handler.worker.postMessage({
+          type: 'PAUSE_SIMULATION',
+          data: {
+            playerIndex: this.playerIndex,
+          }
+        });
+      
+        this.simulateCurrentSong();
+        if (this.isSelected()) {
+          console.log(`Player: ${this.playerIndex}, Song: ${this.currentSongIndex}`);
+          this.playFromCurrentTime();
+        }
+      }
+      else {
+        console.log("Player is on first song, cannot go back");
       }
     }
   
