@@ -16,7 +16,7 @@ const playerSize = 250;
 function App() {
   const [user, setUser] = useState(null);
   const [songHandler, setSongHandler] = useState();
-  const [curSelectedRadio, setCurSelectedRadio] = useState(0);
+  const [curSelectedRadio, setCurSelectedRadio] = useState(-1);
   const [radios, setRadios] = useState([]); // Frontend radio = backend songPlayer
 
   useEffect(() => {
@@ -95,10 +95,17 @@ function App() {
 
   const handleGroupButtonClick = (index) => {
     console.log(`Button clicked for player ${index}`);
-    setCurSelectedRadio(index);
-    songHandler.selectPlayer(index);
+
+    if(curSelectedRadio != index) {
+      setCurSelectedRadio(index);
+      songHandler.selectPlayer(index);
+      }
   };
 
+  const handlePausePlayback = () => {
+    setCurSelectedRadio(-1);
+    songHandler.pausePlayback();
+  }
   
 
   return (
@@ -120,6 +127,21 @@ function App() {
             </div>
           )}
           <h1>Radios</h1>
+          <div style={{ marginBottom: "1rem" }}>
+            <button onClick={handlePausePlayback} 
+              style={{
+                padding: "0.5rem 1rem",
+                fontSize: "1rem",
+                backgroundColor: "#1DB954",
+                color: "white",
+                border: "none",
+                borderRadius: "20px",
+                cursor: "pointer"
+              }}
+            >
+              Pause All
+            </button>
+          </div>
           <ul>
             {radios.map((radio, index) => (
               <li key={index}>

@@ -89,6 +89,20 @@ export class SongHandler {
       }
     };
 
+    pausePlayback = async () => {
+      try {
+        const deviceAvailable = await availableDevices(this.token);
+        if (!deviceAvailable) return;
+
+        await axios.put(`${BACKEND_URL}/pause`, {
+          accessToken: this.token
+        });
+      } catch (error) {
+        console.error("Error pausing playback:", error);
+        alert("Something went wrong while trying to pause playback.");
+      }
+    };
+
     selectPlayer(playerIndex) {
       console.log(`Selecting player ${playerIndex} (previous: ${this.curSelectedPlayer})`);
       console.log('Current songPlayers array:', this.songPlayers);
@@ -123,6 +137,8 @@ export class SongHandler {
       }
       return array;
     }
+
+
 }
 
 

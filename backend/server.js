@@ -74,33 +74,56 @@ app.get("/liked-songs", async (req, res) => {
 
 // 4. Play a Song
 app.put("/play", async (req, res) => {
+  try {
     const { accessToken, uri, timestamp } = req.body;
+    const response = await axios.put(
+      "https://api.spotify.com/v1/me/player/play",
+      {
+        uris: [uri],
+        position_ms: timestamp * 1000,
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      }
+    );
+    res.sendStatus(200);
+  } catch (error) {
+    console.error("Error playing song:", error);
+    res.status(500).json({ error: "Failed to play song" });
+  }
+});
 
-    console.log("Now playing: ", uri);
-    console.log(`at position: ${timestamp * 1000} milliseconds`);
-
-    if (!accessToken || !uri) {
-      return res.status(400).json({ error: "Missing accessToken or uri" });
-    }
-  
-    try {
-      await axios.put(
-        "https://api.spotify.com/v1/me/player/play",
-        { uris: [uri], position_ms: timestamp * 1000 },
-        {
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-            "Content-Type": "application/json",
-          },
-        }
-      );
-  
-      res.send("Playing song");
-    } catch (error) {
-      console.error("Error playing song:", error.response?.data || error.message);
-      res.status(500).send("Failed to play song");
-    }
-  });
-  
+app.put("/pause", async (req, res) => {
+  try {
+    const { accessToken } = req.body;
+    console.log("Attempting to pause playback with token:", accessToken ? "Token present" : "No token");
+    
+    const response = await axios.put(
+      "https://api.spotify.com/v1/me/player/pause",
+      {},
+      {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          "Content-Type": "application/json"
+        },
+      }
+    );
+    console.log("Pause response:", response.status);
+    res.sendStatus(200);
+  } catch (error) {
+    console.error("Error pausing playback:", error.response?.data || error.message);
+    console.error("Error details:", {
+      status: error.response?.status,
+      statusText: error.response?.statusText,
+      data: error.response?.data
+    });
+    res.status(500).json({ 
+      error: "Failed to pause playback",
+      details: error.response?.data || error.message
+    });
+  }
+});
 
 app.listen(3001, () => console.log("Server running"));
