@@ -76,7 +76,10 @@ export class SongHandler {
     playSong = async (trackUri, timestamp) => {
       try {
         const deviceAvailable = await availableDevices(this.token);
-        if (!deviceAvailable) return;
+        if (!deviceAvailable){
+          alert("No available Spotify devices found.");
+          return;
+        } 
     
         await axios.put(`${BACKEND_URL}/play`, {
           accessToken: this.token,
@@ -85,7 +88,6 @@ export class SongHandler {
         });
       } catch (error) {
         console.error("Error playing song:", error);
-        alert("Something went wrong while trying to play the song.");
       }
     };
 

@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 import { SongHandler } from "./player";
 
-const BACKEND_URL = "http://localhost:3001";
+const BACKEND_URL = "https://spotifyradio.onrender.com";
 
 // Global token variable
 let token = null;
