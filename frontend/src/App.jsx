@@ -18,6 +18,7 @@ function App() {
   const [songHandler, setSongHandler] = useState();
   const [curSelectedRadio, setCurSelectedRadio] = useState(-1);
   const [radios, setRadios] = useState([]); // Frontend radio = backend songPlayer
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     asyncStart();
@@ -29,16 +30,19 @@ function App() {
     const urlParams = new URLSearchParams(window.location.search);
     const accessToken = urlParams.get("access_token");
     if (accessToken) {
-      token = accessToken; // Update the global token
-      const songList = await fetchLikedSongs(accessToken,totalSongs);
-      const userData = await fetchUserProfile(accessToken);
-
-      
-
-
-      setUser(userData);
-      console.log('Creating new SongHandler instance useEffect');
-      setSongHandler(new SongHandler(songList, accessToken));
+      setIsLoading(true);
+      token = accessToken;
+      try {
+        const songList = await fetchLikedSongs(accessToken,totalSongs);
+        const userData = await fetchUserProfile(accessToken);
+        setUser(userData);
+        setSongHandler(new SongHandler(songList, accessToken));
+      } catch (error) {
+        console.error("Error during initialization:", error);
+        alert("Something went wrong while loading your music. Please try again.");
+      } finally {
+        setIsLoading(false);
+      }
     }
   };
 
@@ -124,7 +128,9 @@ function App() {
     <div style={{ 
       maxWidth: '100%', 
       padding: '1rem',
-      boxSizing: 'border-box'
+      boxSizing: 'border-box',
+      minHeight: '100vh',
+      backgroundColor: '#121212'
     }}>
       {!token ? (
         <div style={{ 
@@ -147,6 +153,31 @@ function App() {
               Login with Spotify
             </button>
           </a>
+        </div>
+      ) : isLoading ? (
+        <div style={{
+          display: 'flex',
+          flexDirection: 'column',
+          justifyContent: 'center',
+          alignItems: 'center',
+          minHeight: '100vh',
+          gap: '2rem'
+        }}>
+          <div style={{
+            width: '50px',
+            height: '50px',
+            border: '3px solid rgba(29, 185, 84, 0.3)',
+            borderTop: '3px solid #1DB954',
+            borderRadius: '50%',
+            animation: 'spin 1s linear infinite'
+          }} />
+          <p style={{
+            color: '#fff',
+            fontSize: '1.2rem',
+            textAlign: 'center'
+          }}>
+            Loading your music...
+          </p>
         </div>
       ) : (
         <>
@@ -287,3 +318,13 @@ function App() {
 }
 
 export default App;
+
+// Add this to your index.css or create a new CSS file
+const style = document.createElement('style');
+style.textContent = `
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+`;
+document.head.appendChild(style);
