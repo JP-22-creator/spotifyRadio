@@ -121,74 +121,165 @@ function App() {
   }
 
   return (
-    <div>
+    <div style={{ 
+      maxWidth: '100%', 
+      padding: '1rem',
+      boxSizing: 'border-box'
+    }}>
       {!token ? (
-        <a href={`${BACKEND_URL}/login`}>
-          <button>Login with Spotify</button>
-        </a>
+        <div style={{ 
+          display: 'flex', 
+          justifyContent: 'center', 
+          alignItems: 'center', 
+          minHeight: '100vh'
+        }}>
+          <a href={`${BACKEND_URL}/login`} style={{ textDecoration: 'none' }}>
+            <button style={{
+              padding: '1rem 2rem',
+              fontSize: '1.2rem',
+              backgroundColor: '#1DB954',
+              color: 'white',
+              border: 'none',
+              borderRadius: '25px',
+              cursor: 'pointer',
+              boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)'
+            }}>
+              Login with Spotify
+            </button>
+          </a>
+        </div>
       ) : (
         <>
           {user && user.images?.length > 0 && (
-            <div style={{ display: "flex", alignItems: "center", gap: "1rem", marginBottom: "1rem" }}>
+            <div style={{ 
+              display: "flex", 
+              alignItems: "center", 
+              gap: "1rem", 
+              marginBottom: "1.5rem",
+              padding: '0.5rem',
+              backgroundColor: 'rgba(255, 255, 255, 0.05)',
+              borderRadius: '15px'
+            }}>
               <img
                 src={user.images[0].url}
                 alt="Profile"
-                style={{ width: "80px", height: "80px", borderRadius: "50%" }}
+                style={{ 
+                  width: "60px", 
+                  height: "60px", 
+                  borderRadius: "50%",
+                  border: '2px solid #1DB954'
+                }}
               />
-              <p style={{ fontWeight: "bold", fontSize: "1.2rem" }}>{user.display_name}</p>
+              <p style={{ 
+                fontWeight: "bold", 
+                fontSize: "1.1rem",
+                color: '#fff'
+              }}>
+                {user.display_name}
+              </p>
             </div>
           )}
-          <h1>Radios</h1>
-          <div style={{ marginBottom: "1rem", display: "flex", gap: "0.5rem" }}>
+          <h1 style={{ 
+            fontSize: '2rem',
+            marginBottom: '1.5rem',
+            color: '#fff'
+          }}>Radios</h1>
+          
+          <div style={{ 
+            marginBottom: "2rem", 
+            display: "flex", 
+            gap: "0.5rem",
+            justifyContent: 'center',
+            flexWrap: 'wrap'
+          }}>
             <button onClick={handlePreviousTrack} 
               style={{
-                padding: "0.5rem 1rem",
+                padding: "0.8rem 1.2rem",
                 fontSize: "1rem",
                 backgroundColor: "#1DB954",
                 color: "white",
                 border: "none",
-                borderRadius: "20px",
-                cursor: "pointer"
+                borderRadius: "25px",
+                cursor: "pointer",
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.5rem',
+                boxShadow: '0 2px 4px rgba(0, 0, 0, 0.2)'
               }}
             >
               ⏮ Previous
             </button>
             <button onClick={handlePausePlayback} 
               style={{
-                padding: "0.5rem 1rem",
+                padding: "0.8rem 1.2rem",
                 fontSize: "1rem",
                 backgroundColor: "#1DB954",
                 color: "white",
                 border: "none",
-                borderRadius: "20px",
-                cursor: "pointer"
+                borderRadius: "25px",
+                cursor: "pointer",
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.5rem',
+                boxShadow: '0 2px 4px rgba(0, 0, 0, 0.2)'
               }}
             >
               ⏸ Pause
             </button>
             <button onClick={handleNextTrack} 
               style={{
-                padding: "0.5rem 1rem",
+                padding: "0.8rem 1.2rem",
                 fontSize: "1rem",
                 backgroundColor: "#1DB954",
                 color: "white",
                 border: "none",
-                borderRadius: "20px",
-                cursor: "pointer"
+                borderRadius: "25px",
+                cursor: "pointer",
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.5rem',
+                boxShadow: '0 2px 4px rgba(0, 0, 0, 0.2)'
               }}
             >
               Next ⏭
             </button>
           </div>
-          <ul>
+
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))',
+            gap: '1rem',
+            padding: '0.5rem'
+          }}>
             {radios.map((radio, index) => (
-              <li key={index}>
-                <button onClick={() => handleGroupButtonClick(radio.playerIndex)}>
+              <button 
+                key={index}
+                onClick={() => handleGroupButtonClick(radio.playerIndex)}
+                style={{
+                  padding: '1rem',
+                  backgroundColor: curSelectedRadio === radio.playerIndex ? '#1DB954' : 'rgba(255, 255, 255, 0.1)',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '15px',
+                  cursor: 'pointer',
+                  transition: 'all 0.3s ease',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  gap: '0.5rem',
+                  boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)'
+                }}
+              >
+                <span style={{ fontSize: '1.5rem' }}>📻</span>
+                <span style={{ 
+                  fontSize: '1.1rem',
+                  fontWeight: 'bold'
+                }}>
                   Radio {radio.playerIndex}
-                </button>
-              </li>
+                </span>
+              </button>
             ))}
-          </ul>
+          </div>
         </>
       )}
     </div>

@@ -126,56 +126,5 @@ app.put("/pause", async (req, res) => {
   }
 });
 
-app.post("/previous", async (req, res) => {
-  try {
-    const { accessToken } = req.body;
-    console.log("Attempting to go to previous track");
-    
-    const response = await axios.post(
-      "https://api.spotify.com/v1/me/player/previous",
-      {},
-      {
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-          "Content-Type": "application/json"
-        },
-      }
-    );
-    console.log("Previous track response:", response.status);
-    res.sendStatus(200);
-  } catch (error) {
-    console.error("Error going to previous track:", error.response?.data || error.message);
-    res.status(500).json({ 
-      error: "Failed to go to previous track",
-      details: error.response?.data || error.message
-    });
-  }
-});
-
-app.post("/next", async (req, res) => {
-  try {
-    const { accessToken } = req.body;
-    console.log("Attempting to go to next track");
-    
-    const response = await axios.post(
-      "https://api.spotify.com/v1/me/player/next",
-      {},
-      {
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-          "Content-Type": "application/json"
-        },
-      }
-    );
-    console.log("Next track response:", response.status);
-    res.sendStatus(200);
-  } catch (error) {
-    console.error("Error going to next track:", error.response?.data || error.message);
-    res.status(500).json({ 
-      error: "Failed to go to next track",
-      details: error.response?.data || error.message
-    });
-  }
-});
 
 app.listen(3001, () => console.log("Server running"));
